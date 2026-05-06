@@ -5,7 +5,7 @@ module.exports = {
     stake: "https://hub.injective.network/staking",
     game: "https://onikuma.xyz",
     predict: "https://frontrunner.markets",
-    NFT: "https://rarible.com/injective/collections"
+    NFT: "https://rarible.com/injective/collections/"
   },
 
   api: {
