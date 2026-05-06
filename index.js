@@ -1,3 +1,4 @@
+require("./server");
 require("dotenv").config();
 const { Telegraf } = require("telegraf");
 const swap = require("./commands/swap");
