@@ -15,6 +15,10 @@ bot.command("p", async (ctx) => {
   const args = ctx.message.text.split(" ").slice(1);
   const command = args[0]?.toLowerCase();
   const param = args[1]?.toLowerCase();
+  if (command?.startsWith("$")) {
+    const token = command.slice(1);
+    return price(ctx, token);
+  }
 
   switch (command) {
     case "swap":    return swap(ctx);
@@ -30,7 +34,7 @@ bot.command("p", async (ctx) => {
         "`/p swap` — Swap on Injective\n" +
         "`/p bridge` — Bridge assets\n" +
         "`/p stake` — Stake INJ\n" +
-        "`/p price <token>` — Token price\n" +
+        "`/p $<token>` — Token price\n" +
         "`/p game` — Injective games\n" +
         "`/p NFT` — Injective NFTs\n" +
         "`/p predict` — Prediction markets\n",

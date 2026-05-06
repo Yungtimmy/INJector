@@ -5,11 +5,11 @@ module.exports = async (ctx, token) => {
   try {
     if (!token) {
       return ctx.reply(
-        `❓ *Usage:* \`/p price <token>\`\n\n` +
+        `❓ *Usage:* \`/p $ <token>\`\n\n` +
         `*Examples:*\n` +
-        "`/p price inj`\n" +
-        "`/p price btc`\n" +
-        "`/p price eth`",
+        "`/p $ inj`\n" +
+        "`/p $ btc`\n" +
+        "`/p $ eth`",
         { parse_mode: "Markdown" }
       );
     }
