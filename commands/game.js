@@ -17,7 +17,9 @@ module.exports = async (ctx) => {
   } catch (error) {
     ctx.reply(
       ` *Injective Games*\n\n` +
-      ` [Open Onikuma](${links.game})\n\n` +
+      ` [Open Onikuma](${links.game.game1})\n` +
+      ` [Open BlazeNinja](${links.game.game2})\n` +
+      ` [Open Injcasino](${links.game.game3})\n\n` +
       `_Something went wrong, try again_`,
       { parse_mode: "Markdown" }
     );
