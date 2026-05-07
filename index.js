@@ -39,7 +39,8 @@ bot.command("p", async (ctx) => {
         "`/p $<token>` — Token price\n" +
         "`/p game` — Injective games\n" +
         "`/p nft` — Injective NFTs\n" +
-        "`/p predict` — Prediction markets\n",
+        "`/p predict` — Prediction markets\n" +
+        "`/p events` — Upcoming events\n",
         { parse_mode: "Markdown" }
       );
   }
