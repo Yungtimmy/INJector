@@ -1,6 +1,7 @@
 require("./server");
 require("dotenv").config();
 const { Telegraf } = require("telegraf");
+const addevent = require("./commands/addevent");
 const swap = require("./commands/swap");
 const bridge = require("./commands/bridge");
 const stake = require("./commands/stake");
@@ -8,8 +9,8 @@ const price = require("./commands/price");
 const game = require("./commands/game");
 const NFT = require("./commands/NFT");
 const predict = require("./commands/predict");
-const addevent = require("./commands/addevent");
 const events = require("./commands/events");
+const bot = new Telegraf(process.env.BOT_TOKEN);
 
 
 bot.command("p", async (ctx) => {
