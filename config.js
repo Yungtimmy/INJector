@@ -3,9 +3,11 @@ module.exports = {
     swap: "https://helixapp.com/spot",
     bridge: "https://bridge.injective.network",
     stake: "https://hub.injective.network/staking",
-    game: "https://onikuma.xyz",
-    predict: "https://frontrunner.markets",
-    NFT: "https://rarible.com/injective/collections/"
+    game1: "https://onikuma.xyz",
+    game2: "https://blaze.ninja.com",
+    game3: "https://injcasino.io",
+    predict: "https://merlinmarkets.xyz",
+    nft: "https://injective.talis.art//"
   },
 
   api: {
