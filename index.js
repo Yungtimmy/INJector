@@ -8,8 +8,9 @@ const price = require("./commands/price");
 const game = require("./commands/game");
 const NFT = require("./commands/NFT");
 const predict = require("./commands/predict");
+const addevent = require("./commands/addevent");
+const events = require("./commands/events");
 
-const bot = new Telegraf(process.env.BOT_TOKEN);
 
 bot.command("p", async (ctx) => {
   const args = ctx.message.text.split(" ").slice(1);
@@ -28,6 +29,7 @@ bot.command("p", async (ctx) => {
     case "game":    return game(ctx);
     case "nft":    return NFT(ctx);
     case "predict": return predict(ctx);
+    case "events":  return events(ctx);
     default:
       return ctx.reply(
         " *INJector Commands*\n\n" +
