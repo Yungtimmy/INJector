@@ -12,7 +12,6 @@ const predict = require("./commands/predict");
 const events = require("./commands/events");
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-
 bot.command("p", async (ctx) => {
   const args = ctx.message.text.split(" ").slice(1);
   const command = args[0]?.toLowerCase();
@@ -28,7 +27,7 @@ bot.command("p", async (ctx) => {
     case "stake":   return stake(ctx);
     case "price":   return price(ctx, param);
     case "game":    return game(ctx);
-    case "nft":    return NFT(ctx);
+    case "nft":     return NFT(ctx);
     case "predict": return predict(ctx);
     case "events":  return events(ctx);
     default:
@@ -45,6 +44,15 @@ bot.command("p", async (ctx) => {
         { parse_mode: "Markdown" }
       );
   }
+});
+
+bot.command("padmin", async (ctx) => {
+  const args = ctx.message.text.split(" ").slice(1);
+  const sub = args[0]?.toLowerCase();
+  if (sub === "addevent") {
+    return addevent(ctx);
+  }
+  // Add additional admin logic here if needed, or a default response
 });
 
 bot.launch();
