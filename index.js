@@ -6,7 +6,7 @@ const bridge = require("./commands/bridge");
 const stake = require("./commands/stake");
 const price = require("./commands/price");
 const game = require("./commands/game");
-const nft = require("./commands/NFT");
+const NFT = require("./commands/NFT");
 const predict = require("./commands/predict");
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
@@ -26,7 +26,7 @@ bot.command("p", async (ctx) => {
     case "stake":   return stake(ctx);
     case "price":   return price(ctx, param);
     case "game":    return game(ctx);
-    case "NFT":    return nft(ctx);
+    case "nft":    return NFT(ctx);
     case "predict": return predict(ctx);
     default:
       return ctx.reply(
@@ -36,7 +36,7 @@ bot.command("p", async (ctx) => {
         "`/p stake` — Stake INJ\n" +
         "`/p $<token>` — Token price\n" +
         "`/p game` — Injective games\n" +
-        "`/p NFT` — Injective NFTs\n" +
+        "`/p nft` — Injective NFTs\n" +
         "`/p predict` — Prediction markets\n",
         { parse_mode: "Markdown" }
       );
