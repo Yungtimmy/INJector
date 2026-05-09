@@ -3,7 +3,6 @@ module.exports = {
     swap: "https://helixapp.com/spot",
     bridge: "https://bridge.injective.network",
     stake: "https://hub.injective.network/staking",
-    game1: "https://onikuma.xyz",
     game2: "https://blaze.ninja.com",
     game3: "https://injcasino.io",
     predict: "https://merlinmarkets.xyz",
