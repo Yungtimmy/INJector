@@ -15,9 +15,9 @@ module.exports = async (ctx) => {
   } catch (error) {
     ctx.reply(
       ` *Injective Games*\n\n` +
+      `Explore games and gaming dapps built on Injective.\n\n` +
       ` [Open BlazeNinja](${links.game2})\n` +
-      ` [Open Injcasino](${links.game3})\n\n` +
-      `_Something went wrong, try again_`,
+      ` [Open Injcasino](${links.game3})\n\n`,
       { parse_mode: "Markdown" }
     );
   }
