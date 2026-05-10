@@ -34,15 +34,15 @@ bot.command("p", async (ctx) => {
     default:
       return ctx.reply(
         " *INJector Commands*\n\n" +
-        "`/p swap` — Swap on Injective\n" +
-        "`/p bridge` — Bridge assets\n" +
-        "`/p stake` — Stake INJ\n" +
-        "`/p $<token>` — Token price\n" +
-        "`/p game` — Injective games\n" +
-        "`/p nft` — Injective NFTs\n" +
-        "`/p predict` — Prediction markets\n" +
-        "`/p events` — Upcoming events\n",
-        '`/port <address>` — Portfolio tracker\n',
+        "/p swap` — Swap on Injective\n" +
+        "/p bridge` — Bridge assets\n" +
+        "/p stake` — Stake INJ\n" +
+        "/p $<token>` — Token price\n" +
+        "/p game` — Injective games\n" +
+        "/p nft` — Injective NFTs\n" +
+        "/p predict` — Prediction markets\n" +
+        "/p events` — Upcoming events\n",
+        "/p port <address>` — Portfolio tracker",
         { parse_mode: "Markdown" }
       );
   }

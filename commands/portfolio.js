@@ -52,9 +52,42 @@ module.exports = async (ctx) => {
       if (txs.length > 0) {
         txList = txs.map((tx, i) => {
           const shortHash = `${tx.hash.slice(0, 8)}...${tx.hash.slice(-6)}`
+
+          // Determine sent or received + amount
+          const msg = tx.messages?.[0]
+          let direction = '➡️ Sent'
+          let amount = 'N/A'
+
+          if (msg) {
+            const msgType = msg.type ?? ''
+            const value = msg.value ?? {}
+
+            if (msgType.includes('MsgSend')) {
+              const fromAddress = value.from_address ?? value.fromAddress ?? ''
+              direction = fromAddress === address ? '➡️ Sent' : '⬅️ Received'
+              const amountArr = value.amount ?? []
+              const injAmt = Array.isArray(amountArr)
+                ? amountArr.find(a => a.denom === 'inj')
+                : amountArr.denom === 'inj' ? amountArr : null
+              if (injAmt) {
+                amount = `${(parseFloat(injAmt.amount) / 1e18).toFixed(4)} INJ`
+              }
+            } else if (msgType.includes('MsgDelegate') || msgType.includes('MsgUndelegate')) {
+              direction = msgType.includes('MsgDelegate') ? '🥩 Staked' : '🔓 Unstaked'
+              const injAmt = value.amount
+              if (injAmt && injAmt.denom === 'inj') {
+                amount = `${(parseFloat(injAmt.amount) / 1e18).toFixed(4)} INJ`
+              }
+            } else if (msgType.includes('MsgWithdrawDelegator')) {
+              direction = '🎁 Claimed Rewards'
+              amount = 'Rewards'
+            } else {
+              direction = '🔄 Swap/Other'
+            }
+          }
+
           const status = tx.code === 0 ? '✅' : '❌'
-          const type = tx.messages?.[0]?.type?.split('.').pop() ?? 'Unknown'
-          return `${i + 1}. ${status} \`${shortHash}\`\n   Type: ${type}\n   Block: ${tx.blockNumber}`
+          return `${i + 1}. ${status} ${direction}\n   Amount: *${amount}*\n   Hash: \`${shortHash}\``
         }).join('\n\n')
       }
     } catch (txErr) {
