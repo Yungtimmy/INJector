@@ -42,7 +42,7 @@ bot.command("p", async (ctx) => {
         "`/p nft` — Injective NFTs\n" +
         "`/p predict` — Prediction markets\n" +
         "`/p events` — Upcoming events\n",
-        '`/port <address>` — Portfolio tracker\n' +
+        '`/port <address>` — Portfolio tracker\n',
         { parse_mode: "Markdown" }
       );
   }

@@ -21,37 +21,39 @@ module.exports = async (ctx) => {
       )
     }
 
-    // Fetch balance and transactions in parallel
-    const [balanceRes, txRes] = await Promise.all([
-      axios.get(
-        `https://sentry.lcd.injective.network/cosmos/bank/v1beta1/balances/${address}`
-      ),
-      axios.get(
-        `https://sentry.lcd.injective.network/cosmos/tx/v1beta1/txs?events=message.sender='${address}'&limit=5&order_by=ORDER_BY_DESC`
-      ),
-    ])
+    // Fetch balance first
+    const balanceRes = await axios.get(
+      `https://sentry.lcd.injective.network/cosmos/bank/v1beta1/balances/${address}`
+    )
 
-    // Balance
     const injBalance = balanceRes.data.balances?.find(b => b.denom === 'inj')
     const balance = injBalance
       ? (parseFloat(injBalance.amount) / 1e18).toFixed(4)
       : '0.0000'
 
-    // Transactions
-    const txs = txRes.data.tx_responses ?? []
-    const shortAddr = `${address.slice(0, 10)}...${address.slice(-6)}`
-
+    // Fetch transactions separately with encoded address
     let txList = '_No recent transactions found_'
+    try {
+      const encodedAddress = encodeURIComponent(`'${address}'`)
+      const txRes = await axios.get(
+        `https://sentry.lcd.injective.network/cosmos/tx/v1beta1/txs?events=message.sender=${encodedAddress}&limit=5&order_by=ORDER_BY_DESC`
+      )
 
-    if (txs.length > 0) {
-      txList = txs.map((tx, i) => {
-        const hash = tx.txhash
-        const shortHash = `${hash.slice(0, 8)}...${hash.slice(-6)}`
-        const height = tx.height
-        const status = tx.code === 0 ? '✅' : '❌'
-        return `${i + 1}. ${status} \`${shortHash}\`\n   Block: ${height}`
-      }).join('\n\n')
+      const txs = txRes.data.tx_responses ?? []
+
+      if (txs.length > 0) {
+        txList = txs.map((tx, i) => {
+          const shortHash = `${tx.txhash.slice(0, 8)}...${tx.txhash.slice(-6)}`
+          const status = tx.code === 0 ? '✅' : '❌'
+          return `${i + 1}. ${status} \`${shortHash}\`\n   Block: ${tx.height}`
+        }).join('\n\n')
+      }
+    } catch (txErr) {
+      console.error('TX fetch failed:', txErr.message)
+      txList = '_Could not fetch transactions_'
     }
+
+    const shortAddr = `${address.slice(0, 10)}...${address.slice(-6)}`
 
     ctx.reply(
       `👛 *Portfolio Tracker*\n\n` +
@@ -62,7 +64,7 @@ module.exports = async (ctx) => {
       { parse_mode: 'Markdown' }
     )
   } catch (err) {
-    console.error('Portfolio error:', err)
+    console.error('Portfolio error:', err.message)
     ctx.reply(
       `⚠️ Could not fetch portfolio. Check the address and try again.`,
       { parse_mode: 'Markdown' }
