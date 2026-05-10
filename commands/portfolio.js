@@ -1,0 +1,71 @@
+const axios = require('axios')
+
+module.exports = async (ctx) => {
+  try {
+    const args = ctx.message.text.split(' ').slice(1)
+    const address = args[0]
+
+    if (!address) {
+      return ctx.reply(
+        `❓ *Usage:* \`/port <injective address>\`\n\n` +
+        `*Example:*\n` +
+        '`/port inj1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`',
+        { parse_mode: 'Markdown' }
+      )
+    }
+
+    if (!address.startsWith('inj1')) {
+      return ctx.reply(
+        `⚠️ Invalid address. Injective addresses start with *inj1*`,
+        { parse_mode: 'Markdown' }
+      )
+    }
+
+    // Fetch balance and transactions in parallel
+    const [balanceRes, txRes] = await Promise.all([
+      axios.get(
+        `https://sentry.lcd.injective.network/cosmos/bank/v1beta1/balances/${address}`
+      ),
+      axios.get(
+        `https://sentry.lcd.injective.network/cosmos/tx/v1beta1/txs?events=message.sender='${address}'&limit=5&order_by=ORDER_BY_DESC`
+      ),
+    ])
+
+    // Balance
+    const injBalance = balanceRes.data.balances?.find(b => b.denom === 'inj')
+    const balance = injBalance
+      ? (parseFloat(injBalance.amount) / 1e18).toFixed(4)
+      : '0.0000'
+
+    // Transactions
+    const txs = txRes.data.tx_responses ?? []
+    const shortAddr = `${address.slice(0, 10)}...${address.slice(-6)}`
+
+    let txList = '_No recent transactions found_'
+
+    if (txs.length > 0) {
+      txList = txs.map((tx, i) => {
+        const hash = tx.txhash
+        const shortHash = `${hash.slice(0, 8)}...${hash.slice(-6)}`
+        const height = tx.height
+        const status = tx.code === 0 ? '✅' : '❌'
+        return `${i + 1}. ${status} \`${shortHash}\`\n   Block: ${height}`
+      }).join('\n\n')
+    }
+
+    ctx.reply(
+      `👛 *Portfolio Tracker*\n\n` +
+      `📍 Address: \`${shortAddr}\`\n` +
+      `💰 INJ Balance: *${balance} INJ*\n\n` +
+      `📜 *Last 5 Transactions:*\n\n` +
+      `${txList}`,
+      { parse_mode: 'Markdown' }
+    )
+  } catch (err) {
+    console.error('Portfolio error:', err)
+    ctx.reply(
+      `⚠️ Could not fetch portfolio. Check the address and try again.`,
+      { parse_mode: 'Markdown' }
+    )
+  }
+}

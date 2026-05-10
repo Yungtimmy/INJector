@@ -1,6 +1,7 @@
 require("./server");
 require("dotenv").config();
 const { Telegraf } = require("telegraf");
+const portfolio = require('./commands/portfolio')
 const addevent = require("./commands/addevent");
 const swap = require("./commands/swap");
 const bridge = require("./commands/bridge");
@@ -41,6 +42,7 @@ bot.command("p", async (ctx) => {
         "`/p nft` — Injective NFTs\n" +
         "`/p predict` — Prediction markets\n" +
         "`/p events` — Upcoming events\n",
+        '`/port <address>` — Portfolio tracker\n' +
         { parse_mode: "Markdown" }
       );
   }
@@ -54,6 +56,8 @@ bot.command("padmin", async (ctx) => {
   }
   // Add additional admin logic here if needed, or a default response
 });
+
+bot.command('port', async (ctx) => portfolio(ctx))
 
 bot.launch();
 console.log("INJector is live");
