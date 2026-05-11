@@ -14,6 +14,27 @@ const events = require("./commands/events");
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
+const HELP_TEXT =
+  "*Welcome to INJector* 🟦\n\n" +
+  "*Commands*\n" +
+  "`/swap` — Swap on Injective\n" +
+  "`/bridge` — Bridge assets\n" +
+  "`/stake` — Stake INJ\n" +
+  "`/$inj` — INJ token price\n" +
+  "`/price <token>` — Any token price\n" +
+  "`/game` — Injective games\n" +
+  "`/nft` — Injective NFTs\n" +
+  "`/predict` — Prediction markets\n" +
+  "`/events` — Upcoming events\n" +
+  "`/port <address>` — Portfolio tracker";
+
+// ── Start & Help ───────────────────────────────────────────────────────────
+bot.command("start", (ctx) => ctx.reply(HELP_TEXT, { parse_mode: "Markdown" }));
+
+
+// ── INJ price shorthand ────────────────────────────────────────────────────
+bot.command("$inj", (ctx) => price(ctx, "inj"));
+
 // ── Individual slash commands ──────────────────────────────────────────────
 bot.command("swap",    (ctx) => swap(ctx));
 bot.command("bridge",  (ctx) => bridge(ctx));
@@ -24,34 +45,11 @@ bot.command("predict", (ctx) => predict(ctx));
 bot.command("events",  (ctx) => events(ctx));
 bot.command("port",    (ctx) => portfolio(ctx));
 
-// /price <token>  or  /$token
+// ── /price <token> ─────────────────────────────────────────────────────────
 bot.command("price", (ctx) => {
   const args = ctx.message.text.split(" ").slice(1);
   const token = args[0]?.toLowerCase();
   return price(ctx, token);
-});
-
-// Shorthand: /p $token  (kept for convenience)
-bot.hears(/^\/p \$(\w+)/i, (ctx) => {
-  const token = ctx.match[1].toLowerCase();
-  return price(ctx, token);
-});
-
-// ── /p  →  help menu ───────────────────────────────────────────────────────
-bot.command("p", (ctx) => {
-  return ctx.reply(
-    "*INJector Commands*\n\n" +
-    "`/swap` — Swap on Injective\n" +
-    "`/bridge` — Bridge assets\n" +
-    "`/stake` — Stake INJ\n" +
-    "`/price <token>` — Token price\n" +
-    "`/game` — Injective games\n" +
-    "`/nft` — Injective NFTs\n" +
-    "`/predict` — Prediction markets\n" +
-    "`/events` — Upcoming events\n" +
-    "`/port <address>` — Portfolio tracker",
-    { parse_mode: "Markdown" }
-  );
 });
 
 // ── Admin ──────────────────────────────────────────────────────────────────
