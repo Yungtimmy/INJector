@@ -46,7 +46,7 @@ bot.command("events",  (ctx) => events(ctx));
 bot.command("port",    (ctx) => portfolio(ctx));
 
 // ── /price <token> ─────────────────────────────────────────────────────────
-bot.command("price", (ctx) => {
+bot.command("$", (ctx) => {
   const args = ctx.message.text.split(" ").slice(1);
   const token = args[0]?.toLowerCase();
   return price(ctx, token);
