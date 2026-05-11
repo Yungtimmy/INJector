@@ -5,11 +5,11 @@ module.exports = async (ctx, token) => {
   try {
     if (!token) {
       return ctx.reply(
-        `❓ *Usage:* \`/p $ <token>\`\n\n` +
+        `❓ *Usage:* \`/t <token>\`\n\n` +
         `*Examples:*\n` +
-        "`/p $ inj`\n" +
-        "`/p $ btc`\n" +
-        "`/p $ eth`",
+        "`/t inj`\n" +
+        "`/t btc`\n" +
+        "`/t eth`",
         { parse_mode: "Markdown" }
       );
     }
@@ -35,7 +35,7 @@ module.exports = async (ctx, token) => {
     const trend = change >= 0 ? "📈" : "📉";
 
     ctx.reply(
-      ` *${token.toUpperCase()} Price*\n\n` +
+      `*${token.toUpperCase()} Price*\n\n` +
       `Price: *$${price}*\n` +
       `24h Change: *${change}%* ${trend}\n` +
       `Market Cap: *$${marketCap}B*`,
@@ -43,7 +43,7 @@ module.exports = async (ctx, token) => {
     );
   } catch (error) {
     ctx.reply(
-      ` Could not fetch price for *${token?.toUpperCase()}* right now. Try again later.`,
+      `Could not fetch price for *${token?.toUpperCase()}* right now. Try again later.`,
       { parse_mode: "Markdown" }
     );
   }

@@ -20,8 +20,8 @@ const HELP_TEXT =
   "`/swap` — Swap on Injective\n" +
   "`/bridge` — Bridge assets\n" +
   "`/stake` — Stake INJ\n" +
-  "`/$inj` — INJ token price\n" +
-  "`/price <token>` — Any token price\n" +
+  "`/t inj` — INJ token price\n" +
+  "`/t <token>` — Any token price\n" +
   "`/game` — Injective games\n" +
   "`/nft` — Injective NFTs\n" +
   "`/predict` — Prediction markets\n" +
@@ -45,8 +45,8 @@ bot.command("predict", (ctx) => predict(ctx));
 bot.command("events",  (ctx) => events(ctx));
 bot.command("port",    (ctx) => portfolio(ctx));
 
-// ── /price <token> ─────────────────────────────────────────────────────────
-bot.command("$", (ctx) => {
+// ── Token price: /t <token>  or  /t inj ───────────────────────────────────
+bot.command("t", (ctx) => {
   const args = ctx.message.text.split(" ").slice(1);
   const token = args[0]?.toLowerCase();
   return price(ctx, token);
