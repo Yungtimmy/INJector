@@ -35,13 +35,13 @@ const KNOWN_TOKENS = {
   'factory/inj127l5a2wmkyvucxdlupqyac3y0v6wqfhq03ka64/qunt': {
     symbol: 'QUNT',
     decimals: 6,
-    coingeckoId: null,
+    coingeckoId: 'injective-quants',
     category: 'meme',
   },
   'factory/inj1fnkhu0wrva9a7vgsf6ek5e6dvvkaf2pvvdn5um/talis': {
     symbol: 'TALIS',
     decimals: 6,
-    coingeckoId: null,
+    coingeckoId: 'talis-protocol',
     category: 'meme',
   },
   'factory/inj1maeyvxfamtn8lfyxpjca8kuvauuf2qeu6gtxm7/whd': {
