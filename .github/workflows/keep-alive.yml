@@ -1,0 +1,13 @@
+name: Keep Fly App Alive
+
+on:
+  schedule:
+    - cron: '*4-59/5 * * * *'  # every 5 minutes
+  workflow_dispatch:        # lets you trigger manually too
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping app
+        run: curl -f https://yourapp.fly.dev || echo "Ping failed"
