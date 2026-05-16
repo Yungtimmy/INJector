@@ -15,14 +15,15 @@ module.exports = async (ctx) => {
     ctx.reply(
       ` *Swap on Injective*\n\n` +
       `INJ Price: *$${price}* ${trend} ${change}%\n\n` +
-      ` [Open Helix](${links.swap})`,
+      ` [Open Helix](${links.swap1})\n\n` +
+      ` [Open Choice](${links.swap2})`,
       { parse_mode: "Markdown", disable_web_page_preview: false }
     );
   } catch (error) {
     ctx.reply(
       ` *Swap on Injective*\n\n` +
-      `[Open Helix](${links.swap})\n\n` +
-      `_Could not fetch live price right now_`,
+      ` [Open Helix](${links.swap1})\n\n` +
+      ` [Open Choice](${links.swap2})`,
       { parse_mode: "Markdown" }
     );
   }

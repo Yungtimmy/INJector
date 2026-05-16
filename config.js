@@ -1,6 +1,7 @@
 module.exports = {
   links: {
-    swap: "https://helixapp.com/spot",
+    swap1: "https://helixapp.com/spot",
+    swap2: "https://choice.exchange/swap",
     bridge: "https://bridge.injective.network",
     stake: "https://hub.injective.network/staking",
     game2: "https://blaze.ninja.com",
