@@ -4,7 +4,7 @@ module.exports = {
     swap2: "https://choice.exchange/swap",
     bridge: "https://bridge.injective.network",
     stake: "https://hub.injective.network/staking",
-    game2: "https://blaze.ninja.com",
+    game2: "https://app.blaze.ninja/?r=Tebas",
     game3: "https://injcasino.io",
     predict: "https://merlinmarkets.xyz",
     nft: "https://injective.talis.art//"
