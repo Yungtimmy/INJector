@@ -9,7 +9,7 @@ const stake = require("./commands/stake");
 const price = require("./commands/price");
 const game = require("./commands/game");
 const NFT = require("./commands/NFT");
-const inj = require("./commands/inj");
+const convert = require('./commands/convert');
 const predict = require("./commands/predict");
 const events = require("./commands/events");
 
@@ -45,7 +45,11 @@ bot.command("nft",     (ctx) => NFT(ctx));
 bot.command("predict", (ctx) => predict(ctx));
 bot.command("events",  (ctx) => events(ctx));
 bot.command("port",    (ctx) => portfolio(ctx));
-bot.command('inj', async (ctx) => inj(ctx));
+
+// Register all token converters
+['inj', 'btc', 'eth', 'sol', 'xion', 'pi'].forEach(token => {
+  bot.command(token, (ctx) => convert(ctx))
+})
 
 // ── Token price: /t <token>  or  /t inj ───────────────────────────────────
 bot.command("t", (ctx) => {
