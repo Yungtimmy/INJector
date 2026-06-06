@@ -45,7 +45,7 @@ bot.command("nft",     (ctx) => NFT(ctx));
 bot.command("predict", (ctx) => predict(ctx));
 bot.command("events",  (ctx) => events(ctx));
 bot.command("port",    (ctx) => portfolio(ctx));
-bot.command('inj',     (ctx) => inj(ctx))
+bot.command('inj', async (ctx) => inj(ctx));
 
 // ── Token price: /t <token>  or  /t inj ───────────────────────────────────
 bot.command("t", (ctx) => {
