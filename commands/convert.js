@@ -14,7 +14,6 @@ module.exports = async (ctx) => {
     const args = ctx.message.text.split(' ')
     const command = args[0].replace('/', '').toLowerCase()
     const input = args[1]
-
     const token = TOKENS[command]
 
     if (!token) {
@@ -28,9 +27,9 @@ module.exports = async (ctx) => {
     if (!input) {
       return ctx.reply(
         `❓ *Usage:*\n\n` +
-        `\`/${command} 5\` — Convert ${token.symbol} to USD & Naira\n` +
-        `\`/${command} $50\` — Convert $50 USD to ${token.symbol}\n` +
-        `\`/${command} ₦50000\` — Convert ₦50,000 to ${token.symbol}`,
+        `\`/${command} 5\` — ${token.symbol} to USD & Naira\n` +
+        `\`/${command} $50\` — $50 USD to ${token.symbol}\n` +
+        `\`/${command} ₦50000\` — ₦50,000 to ${token.symbol}`,
         { parse_mode: 'Markdown' }
       )
     }
@@ -45,16 +44,12 @@ module.exports = async (ctx) => {
     const change = data.usd_24h_change?.toFixed(2)
     const trend = change >= 0 ? '📈' : '📉'
 
-    // ── Reverse: /inj $50 ──────────────────────────────────────────────
+    // Reverse: /inj $50
     if (input.startsWith('$')) {
       const usdAmount = parseFloat(input.replace('$', ''))
       if (isNaN(usdAmount)) return ctx.reply('⚠️ Invalid amount.')
-
       const tokenAmount = (usdAmount / usdPrice).toFixed(6)
-      const ngnEquiv = (usdAmount * (ngnPrice / usdPrice)).toLocaleString('en-NG', {
-        minimumFractionDigits: 2,
-      })
-
+      const ngnEquiv = (usdAmount * (ngnPrice / usdPrice)).toLocaleString('en-NG', { minimumFractionDigits: 2 })
       return ctx.reply(
         `${token.flag} *USD → ${token.symbol}*\n\n` +
         `*$${usdAmount} USD* = *${tokenAmount} ${token.symbol}*\n` +
@@ -65,16 +60,12 @@ module.exports = async (ctx) => {
       )
     }
 
-    // ── Reverse: /inj ₦50000 ──────────────────────────────────────────
+    // Reverse: /inj ₦50000
     if (input.startsWith('₦') || input.toLowerCase().startsWith('ngn')) {
       const ngnAmount = parseFloat(input.replace('₦', '').replace(/ngn/i, '').replace(/,/g, ''))
       if (isNaN(ngnAmount)) return ctx.reply('⚠️ Invalid amount.')
-
       const tokenAmount = (ngnAmount / ngnPrice).toFixed(6)
-      const usdEquiv = (ngnAmount / (ngnPrice / usdPrice)).toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-      })
-
+      const usdEquiv = (ngnAmount / (ngnPrice / usdPrice)).toLocaleString('en-US', { minimumFractionDigits: 2 })
       return ctx.reply(
         `${token.flag} *NGN → ${token.symbol}*\n\n` +
         `*₦${ngnAmount.toLocaleString()} NGN* = *${tokenAmount} ${token.symbol}*\n` +
@@ -85,21 +76,14 @@ module.exports = async (ctx) => {
       )
     }
 
-    // ── Forward: /inj 5 ───────────────────────────────────────────────
+    // Forward: /inj 5
     const amount = parseFloat(input)
     if (isNaN(amount)) return ctx.reply('⚠️ Invalid amount.')
 
-    const usdValue = (amount * usdPrice).toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })
+    const usdValue = (amount * usdPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    const ngnValue = (amount * ngnPrice).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-    const ngnValue = (amount * ngnPrice).toLocaleString('en-NG', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })
-
-    ctx.reply(
+    return ctx.reply(
       `${token.flag} *${token.symbol} Converter*\n\n` +
       `*${amount} ${token.symbol}* is worth:\n\n` +
       `🇺🇸 *$${usdValue} USD*\n` +
@@ -110,5 +94,6 @@ module.exports = async (ctx) => {
     )
   } catch (err) {
     console.error('Converter error:', err.message)
-    ctx.reply(`⚠️ Could not fetch price right now. Try again later.`)
-                                       }
+    return ctx.reply('⚠️ Could not fetch price right now. Try again later.')
+  }
+}
