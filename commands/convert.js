@@ -29,7 +29,7 @@ module.exports = async (ctx) => {
         `❓ *Usage:*\n\n` +
         `\`/${command} 5\` — ${token.symbol} to USD & Naira\n` +
         `\`/${command} $50\` — $50 USD to ${token.symbol}\n` +
-        `\`/${command} ₦50000\` — ₦50,000 to ${token.symbol}`,
+        `\`/${command} #50000\` — ₦50,000 to ${token.symbol}`,
         { parse_mode: 'Markdown' }
       )
     }
@@ -60,9 +60,9 @@ module.exports = async (ctx) => {
       )
     }
 
-    // Reverse: /inj ₦50000
-    if (input.startsWith('₦') || input.toLowerCase().startsWith('ngn')) {
-      const ngnAmount = parseFloat(input.replace('₦', '').replace(/ngn/i, '').replace(/,/g, ''))
+    // Reverse: /inj #50000
+    if (input.startsWith('#')) {
+      const ngnAmount = parseFloat(input.replace('#', '').replace(/,/g, ''))
       if (isNaN(ngnAmount)) return ctx.reply('⚠️ Invalid amount.')
       const tokenAmount = (ngnAmount / ngnPrice).toFixed(6)
       const usdEquiv = (ngnAmount / (ngnPrice / usdPrice)).toLocaleString('en-US', { minimumFractionDigits: 2 })

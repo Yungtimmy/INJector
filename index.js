@@ -2,7 +2,6 @@ require("./server");
 require("dotenv").config();
 const { Telegraf } = require("telegraf");
 const portfolio = require('./commands/portfolio')
-const addevent = require("./commands/addevent");
 const swap = require("./commands/swap");
 const bridge = require("./commands/bridge");
 const stake = require("./commands/stake");
@@ -11,7 +10,6 @@ const game = require("./commands/game");
 const NFT = require("./commands/NFT");
 const convert = require('./commands/convert');
 const predict = require("./commands/predict");
-const events = require("./commands/events");
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
@@ -26,7 +24,6 @@ const HELP_TEXT =
   "`/game` — Injective games\n" +
   "`/nft` — Injective NFTs\n" +
   "`/predict` — Prediction markets\n" +
-  "`/events` — Upcoming events\n" +
   "`/port <address>` — Portfolio tracker";
 
 // ── Start & Help ───────────────────────────────────────────────────────────
@@ -43,7 +40,6 @@ bot.command("stake",   (ctx) => stake(ctx));
 bot.command("game",    (ctx) => game(ctx));
 bot.command("nft",     (ctx) => NFT(ctx));
 bot.command("predict", (ctx) => predict(ctx));
-bot.command("events",  (ctx) => events(ctx));
 bot.command("port",    (ctx) => portfolio(ctx));
 
 // Register all token converters
@@ -59,10 +55,6 @@ bot.command("t", (ctx) => {
 });
 
 // ── Admin ──────────────────────────────────────────────────────────────────
-bot.command("padmin", (ctx) => {
-  const args = ctx.message.text.split(" ").slice(1);
-  if (args[0]?.toLowerCase() === "addevent") return addevent(ctx);
-});
 
 bot.launch();
 console.log("INJector is live");

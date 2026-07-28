@@ -76,6 +76,192 @@ function buildPriceQuery(tokens) {
   return ids.join(',')
 }
 
+// ── Transaction helpers ─────────────────────────────────────────────────
+const IBC_CHANNELS = {
+  'channel-141': 'Ethereum (Peggy)',
+  'channel-1': 'Osmosis',
+  'channel-220': 'Cosmos Hub',
+  'channel-148': 'Axelar',
+  'channel-84': 'Kava',
+  'channel-177': 'Secret Network',
+  'channel-222': 'Stride',
+}
+
+function truncateMiddle(s, left = 14, right = 6) {
+  if (!s || s.length <= left + right + 3) return s
+  return `${s.slice(0, left)}…${s.slice(-right)}`
+}
+
+function formatDenom(denom) {
+  if (!denom) return 'unknown'
+  const known = KNOWN_TOKENS[denom]
+  if (known) return known.symbol
+  if (denom.startsWith('factory/')) {
+    const parts = denom.split('/')
+    return parts[2]?.toUpperCase() || truncateMiddle(denom, 14, 6)
+  }
+  if (denom.startsWith('ibc/')) return truncateMiddle(denom, 12, 6)
+  if (denom.startsWith('peggy')) return truncateMiddle(denom, 18, 6)
+  return denom
+}
+
+// Recursively flatten messages; unwraps authz MsgExec so multisig-wrapped
+// inner messages are categorized on their own. Returns `{ msg, wasMultisig }`
+// pairs so renderers can flag tx that arrived through an external wrapper.
+function extractInnerMessages(msg, wasMultisig = false) {
+  if (!msg) return []
+  if (msg.type === '/cosmos.authz.v1beta1.MsgExec' && Array.isArray(msg.value?.msgs)) {
+    return msg.value.msgs.flatMap(m => extractInnerMessages(m, true))
+  }
+  return [{ msg, wasMultisig }]
+}
+
+// Categorize a single (already-unwrapped) protobuf message into a renderer-friendly entry.
+// `wasMultisig` is true if the message reached us through an external wrapper (authz MsgExec).
+function categorizeMessage(tx, msg, address, wasMultisig = false) {
+  const type = msg.type ?? ''
+  const v = msg.value ?? {}
+
+  // SENT / RECEIVED — bank MsgSend (handles multi-denom sends)
+  if (type.includes('MsgSend')) {
+    const from = v.from_address ?? v.fromAddress
+    const to = v.to_address ?? v.toAddress
+    const amounts = v.amount ?? []
+    if (!amounts.length) return null
+    const parts = amounts.map(a => {
+      const info = KNOWN_TOKENS[a.denom] ?? { decimals: 18 }
+      return { value: formatAmount(a.amount, info.decimals), symbol: formatDenom(a.denom) }
+    })
+    const first = parts[0]
+    const isSent = from === address
+    const amountLabel = parts.length > 1
+      ? `${first.value.toFixed(4)} ${first.symbol} +${parts.length - 1} more`
+      : `${first.value.toFixed(4)} ${first.symbol}`
+    return {
+      kind: isSent ? 'sent' : 'received',
+      icon: isSent ? '➡️' : '⬅️',
+      action: isSent ? 'Sent' : 'Received',
+      counterparty: isSent ? to : from,
+      tokenCA: null,
+      amount: first.value,
+      denomLabel: first.symbol,
+      amountLabel,
+      wasMultisig,
+      timestamp: tx.block_unix_timestamp,
+      status: tx.code === 0,
+    }
+  }
+
+  // BRIDGED — IBC MsgTransfer
+  if (type.includes('MsgTransfer')) {
+    const sender = v.sender
+    const receiver = v.receiver
+    const channel = v.source_channel ?? 'unknown'
+    const token = v.token ?? {}
+    const info = KNOWN_TOKENS[token.denom] ?? { decimals: 18 }
+    const amount = formatAmount(token.amount ?? '0', info.decimals)
+    const destChain = IBC_CHANNELS[channel] ?? `IBC (${channel})`
+    return {
+      kind: 'bridged',
+      icon: '🌉',
+      action: 'Bridged',
+      counterparty: sender === address ? receiver : sender,
+      tokenCA: `${destChain} · ${channel}`,
+      amount,
+      denomLabel: formatDenom(token.denom),
+      amountLabel: `${amount.toFixed(4)} ${formatDenom(token.denom)}`,
+      wasMultisig,
+      timestamp: tx.block_unix_timestamp,
+      status: tx.code === 0,
+    }
+  }
+
+  // CONTRACT — CW20 / wasm MsgExecuteContract (covers DEX swaps + Peggy); handles multi-denom funds
+  if (type.includes('MsgExecuteContract')) {
+    const sender = v.sender
+    const contract = v.contract ?? ''
+    const funds = v.funds ?? []
+    let inner = {}
+    try {
+      inner = typeof v.msg === 'string' ? JSON.parse(v.msg) : (v.msg ?? {})
+    } catch {}
+    const isSwap = Object.keys(inner).some(k => k.toLowerCase().includes('swap'))
+    let amount = null
+    let denom = ''
+    let amountLabel = null
+    if (funds.length > 0) {
+      denom = funds[0].denom
+      const info = KNOWN_TOKENS[denom] ?? { decimals: 18 }
+      amount = formatAmount(funds[0].amount, info.decimals)
+      const head = `${amount.toFixed(4)} ${formatDenom(denom)}`
+      amountLabel = funds.length > 1
+        ? `${head} +${funds.length - 1} more`
+        : head
+    }
+    const counterpartyAddr = sender === address ? contract : sender
+    return {
+      kind: isSwap ? 'swapped' : 'contract',
+      icon: isSwap ? '🔁' : '🧾',
+      action: isSwap ? 'Swapped' : 'Contract',
+      counterparty: counterpartyAddr || 'unknown',
+      tokenCA: contract || null,
+      amount,
+      denomLabel: denom ? formatDenom(denom) : null,
+      amountLabel,
+      wasMultisig,
+      timestamp: tx.block_unix_timestamp,
+      status: tx.code === 0,
+    }
+  }
+
+  // NATIVE SPOT — Helix native orderbook
+  if (
+    type.includes('MsgCreateSpotMarketOrder') ||
+    type.includes('MsgBatchUpdateOrders') ||
+    type.includes('MsgCreateDerivativeMarketOrder') ||
+    type.includes('MsgBatchUpdateDerivativeOrders')
+  ) {
+    const sender = v.sender ?? ''
+    const orderInfo = v.order?.order_info ?? v.order ?? {}
+    const marketId = orderInfo.market_id ?? ''
+    return {
+      kind: 'swapped',
+      icon: '🔁',
+      action: 'Spot Trade',
+      counterparty: marketId ? `Helix · ${marketId}` : 'Helix',
+      tokenCA: marketId || null,
+      amount: null,
+      denomLabel: null,
+      amountLabel: null,
+      wasMultisig,
+      timestamp: tx.block_unix_timestamp,
+      status: tx.code === 0,
+    }
+  }
+
+  return null
+}
+
+function renderTx(entry, idx) {
+  const status = entry.status ? '✅' : '❌'
+  const date = entry.timestamp ? formatDate(entry.timestamp) : 'Unknown date'
+  const lines = [`${idx}. ${status} ${entry.icon} *${entry.action}*`]
+  if (entry.amountLabel) {
+    lines.push(`   💰 *${entry.amountLabel}*`)
+  } else if (entry.amount !== null && entry.denomLabel) {
+    lines.push(`   💰 *${entry.amount.toFixed(4)} ${entry.denomLabel}*`)
+  }
+  lines.push(`   🔗 \`${entry.counterparty}\``)
+  if (entry.tokenCA) {
+    lines.push(`   📝 ${entry.tokenCA}`)
+  }
+  if (entry.wasMultisig) {
+    lines.push(`   🔐 Multisig`)
+  }
+  lines.push(`   🕐 ${date}`)
+  return lines.join('\n')
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
 module.exports = async (ctx) => {
   try {
@@ -148,62 +334,31 @@ module.exports = async (ctx) => {
       }).join('\n')
     }
 
-    // ── Fetch recent transactions (sent/received only) ────────────────────
+    // ── Fetch + categorize recent transactions (sent/swapped/bridged/received) ───
     let txList = '_No recent transactions found_'
     try {
-      const injPrice = prices['injective-protocol']?.usd ?? 0
-
       const txRes = await axios.get(
-        `https://sentry.exchange.grpc-web.injective.network/api/explorer/v1/accountTxs/${address}?limit=20`
+        `https://sentry.exchange.grpc-web.injective.network/api/explorer/v1/accountTxs/${address}?limit=100`
       )
       const txs = txRes.data.data ?? []
 
-      // Filter to MsgSend only, take first 5
-      const sendTxs = txs
-        .filter(tx => {
-          const msgType = tx.messages?.[0]?.type ?? ''
-          return msgType.includes('MsgSend')
-        })
-        .slice(0, 5)
-
-      if (sendTxs.length > 0) {
-        txList = sendTxs.map((tx, i) => {
-          const msg = tx.messages[0]
-          const value = msg.value ?? {}
-          const from = value.from_address ?? value.fromAddress ?? ''
-          const isSent = from === address
-          const direction = isSent ? '➡️ Sent' : '⬅️ Received'
-
-          // Amount
-          const amountArr = value.amount ?? []
-          const injAmt = Array.isArray(amountArr)
-            ? amountArr.find(a => a.denom === 'inj')
-            : amountArr.denom === 'inj' ? amountArr : null
-
-          let amountStr = 'N/A'
-          let usdStr = ''
-          if (injAmt) {
-            const injFloat = parseFloat(injAmt.amount) / 1e18
-            amountStr = `${injFloat.toFixed(4)} INJ`
-            if (injPrice) {
-              usdStr = ` ≈ $${formatUsd(injFloat * injPrice)}`
-            }
+      // Walk newest-first; recursively unwrap multisig/authz; take first 5 categorizable entries.
+      const entries = []
+      outer: for (const tx of txs) {
+        const inner = (tx.messages ?? []).flatMap(m => extractInnerMessages(m))
+        for (const item of inner) {
+          const entry = categorizeMessage(tx, item.msg, address, item.wasMultisig)
+          if (entry) {
+            entries.push(entry)
+            if (entries.length >= 5) break outer
           }
+        }
+      }
 
-          // Date
-          const date = tx.block_unix_timestamp
-            ? formatDate(tx.block_unix_timestamp)
-            : tx.block_timestamp ?? 'Unknown date'
-
-          const status = tx.code === 0 ? '✅' : '❌'
-          return (
-            `${i + 1}. ${status} ${direction}\n` +
-            `   💰 *${amountStr}*${usdStr}\n` +
-            `   🕐 ${date}`
-          )
-        }).join('\n\n')
-
-        if (sendTxs.length === 0) txList = '_No sent/received transactions found_'
+      if (entries.length > 0) {
+        txList = entries.map((e, i) => renderTx(e, i + 1)).join('\n\n')
+      } else {
+        txList = '_No recent activity found_'
       }
     } catch (txErr) {
       console.error('TX fetch failed:', txErr.message)
